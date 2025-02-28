@@ -4,162 +4,211 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Regulación de Diabetes</title>
-  <link rel="stylesheet" href="../css/login.css">
   <style>
-    /* Fondo degradado y animación de entrada */
-    body {
+    /* -------------------
+       ESTILOS GENERALES
+    ------------------- */
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #2980b9, #8e44ad);
+    }
+
+    body {
+      /* Fondo con degradado en tonos morados */
+      background: linear-gradient(135deg,rgba(255, 189, 102, 0.84),rgba(209, 83, 10, 0.76));
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      animation: fadeIn 1s ease-in-out;
+      padding: 20px;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    /* Contenedor principal */
+
+    /* Contenedor principal que agrupa todo el formulario */
     .container-form {
-      background: rgba(255, 255, 255, 0.15);
+      background-color: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
-      padding: 2rem;
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       width: 100%;
-      max-width: 600px;
+      max-width: 650px;
       color: #fff;
-      margin: 20px;
-      animation: slideUp 0.8s ease-out;
+      padding: 20px;
+      animation: fadeIn 0.8s ease;
     }
-    @keyframes slideUp {
-      from { transform: translateY(50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
+
     /* Título principal */
     .container-form h1 {
       text-align: center;
-      margin-bottom: 20px;
-      font-size: 28px;
-      color: #f1c40f;
+      margin-bottom: 15px;
+      font-size: 24px;
+      color: #fff;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
+
     /* Mensaje de error */
     .error-message {
-      color: #e74c3c;
+      color: #ff4f4f;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       font-weight: bold;
     }
-    /* Secciones del formulario */
+
+    /* ------------------------
+       SECCIONES DEL FORMULARIO
+    ------------------------ */
     .form-section {
-      margin-bottom: 30px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      padding-bottom: 20px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
+
     .form-section h2 {
-      font-size: 20px;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
       margin-bottom: 15px;
-      color: #f1c40f;
-      border-left: 4px solid #f1c40f;
-      padding-left: 10px;
+      color: #ffeb3b; /* Amarillo para resaltar */
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
+
+    .form-section h2 span {
+      margin-right: 8px; /* espacio para el ícono */
+    }
+
     /* Grupos de inputs */
     .input-group {
       margin-bottom: 15px;
     }
+
     .input-group label {
       display: block;
-      font-size: 15px;
       margin-bottom: 5px;
+      font-weight: bold;
+      color: #fff;
+      font-size: 14px;
     }
+
     .input-group input,
     .input-group select {
       width: 100%;
       padding: 10px;
       border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50px;
+      font-size: 15px;
       color: #333;
+      background-color: #fff;
       outline: none;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: box-shadow 0.2s, transform 0.2s;
     }
+
     .input-group input:focus,
     .input-group select:focus {
-      box-shadow: 0 0 8px rgba(241, 196, 15, 0.8);
+      box-shadow: 0 0 8px rgba(221, 134, 2, 0.9);
       transform: scale(1.02);
     }
-    /* Opciones de comida (Desayuno, Comida, Cena) */
+
+    /* ------------------------
+       OPCIONES DE COMIDA
+    ------------------------ */
     .food-options {
       display: flex;
       justify-content: space-around;
       margin-top: 10px;
     }
+
     .btn-food {
       padding: 10px 20px;
-      background-color: #f1c40f;
+      background-color: #ffeb3b; /* Amarillo de base */
       border: none;
-      border-radius: 5px;
+      border-radius: 50px;
       color: #333;
       cursor: pointer;
       transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+      font-weight: bold;
     }
+
     .btn-food:hover {
-      background-color: #e67e22;
+      background-color: #ffc107; /* Amarillo más oscuro */
       transform: scale(1.05);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 10px rgba(255, 96, 4, 0.88);
     }
-    /* Sección de eventos (Hipoglucemia / Hiperglucemia) */
+
+    /* ------------------------
+       SECCIONES HIPO/HIPER
+    ------------------------ */
     .event-section {
       transition: max-height 0.5s ease-in-out, opacity 0.5s ease;
       overflow: hidden;
       opacity: 0;
       max-height: 0;
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
       padding: 15px;
       margin-top: 15px;
-      color: #333;
+      color: #fff;
     }
+
     .event-section.active {
       opacity: 1;
       max-height: 500px;
     }
-    /* Contenedor de botones */
+
+    /* ------------------------
+       BOTONES FINALES
+    ------------------------ */
     .button-container {
       display: flex;
       gap: 10px;
       margin-top: 20px;
+      justify-content: space-between;
     }
+
     .btn-submit,
     .btn-choose {
       width: 48%;
-      padding: 10px;
+      padding: 12px;
       border: none;
       border-radius: 5px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       color: #fff;
       cursor: pointer;
-      transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+      transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
     }
+
+    /* Botón Enviar (verde) */
     .btn-submit {
-      background: #f1c40f;
+      background-color: #40b324;
     }
+
     .btn-submit:hover {
-      background: #e67e22;
+      background-color: #34a119;
       transform: scale(1.05);
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
+
+    /* Botón Menú (azul) */
     .btn-choose {
-      background: #3498db;
+      background-color: #0076ff;
     }
+
     .btn-choose:hover {
-      background: #2980b9;
+      background-color: #0056cc;
       transform: scale(1.05);
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
@@ -168,6 +217,7 @@
 <body>
   <div class="container-form">
     <?php
+      // Mensajes de error si existen
       if (isset($_GET['error'])) {
         echo "<p class='error-message'>";
         switch ($_GET['error']) {
@@ -189,11 +239,11 @@
         echo "</p>";
       }
     ?>
-    <h1>Registro de Datos para la Diabetes</h1>
+    <h1>📋Registro Datos</h1>
     <form action="submit.php" method="POST">
       <!-- Sección de Control de Glucosa -->
       <div class="form-section">
-        <h2>Control de Glucosa</h2>
+        <h2><span>🩸</span>Control de Glucosa</h2>
         <div class="input-group">
           <label for="fecha">Fecha:</label>
           <input type="date" id="fecha" name="fecha" required>
@@ -210,7 +260,7 @@
 
       <!-- Sección de Comida -->
       <div class="form-section">
-        <h2>Registro de Comida</h2>
+        <h2><span>🍽️</span>Registro de Comida</h2>
         <div class="input-group">
           <label for="tipo_comida">Tipo de Comida:</label>
           <div class="food-options">
@@ -218,6 +268,7 @@
             <button type="button" class="btn-food" data-value="Comida">Comida</button>
             <button type="button" class="btn-food" data-value="Cena">Cena</button>
           </div>
+          <!-- Campo hidden para almacenar el valor del tipo de comida -->
           <input type="hidden" id="tipo_comida" name="tipo_comida" required>
         </div>
         <div class="input-group">
@@ -240,7 +291,7 @@
 
       <!-- Sección de Tipo de Evento (Hipo / Hiper) -->
       <div class="form-section">
-        <h2>Tipo de Evento</h2>
+        <h2><span>⚠️</span>Tipo de Evento</h2>
         <div class="input-group">
           <label for="evento">Seleccionar Tipo:</label>
           <select id="evento" name="evento">
@@ -283,23 +334,26 @@
 
       <!-- Botones de Enviar y Menú Principal -->
       <div class="button-container">
-        <button type="submit" class="btn-submit">📤 Enviar Datos</button>
-        <button type="button" class="btn-choose" onclick="window.location.href='seleccionar.php'">📋 Menú Principal</button>
+        <button type="submit" class="btn-submit">✅Enviar Datos</button>
+        <button type="button" class="btn-choose" onclick="window.location.href='seleccionar.php'">🏠Menú Principal</button>
       </div>
     </form>
   </div>
 
   <script>
-    // Selección de tipo de comida
+    // Botones de tipo de comida
     document.querySelectorAll('.btn-food').forEach(button => {
       button.addEventListener('click', () => {
-        document.querySelectorAll('.btn-food').forEach(btn => btn.style.backgroundColor = '#f1c40f');
-        button.style.backgroundColor = '#e67e22';
+        // Reestablecer color de todos los botones
+        document.querySelectorAll('.btn-food').forEach(btn => btn.style.backgroundColor = '#ffeb3b');
+        // Marcar el botón actual
+        button.style.backgroundColor = '#ffc107';
+        // Asignar valor al input hidden
         document.getElementById('tipo_comida').value = button.dataset.value;
       });
     });
 
-    // Mostrar/ocultar secciones de eventos según selección
+    // Mostrar/ocultar secciones de eventos (Hipo/Hiper)
     document.getElementById('evento').addEventListener('change', function() {
       const selectedEvent = this.value;
       document.getElementById('hiperglucemia').classList.toggle('active', selectedEvent === 'hiperglucemia');

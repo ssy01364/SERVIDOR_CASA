@@ -42,207 +42,159 @@ if (!$resultado) {
 <head>
   <meta charset="UTF-8">
   <title>Datos del Día</title>
-  <link rel="stylesheet" href="../css/login.css"> 
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700|Roboto:400,500&display=swap" rel="stylesheet">
   <style>
-    /* Fondo animado con un degradado */
+    /* Fondo degradado animado */
     body {
       margin: 0;
       padding: 0;
-      background: linear-gradient(-45deg, #74ebd5, #ACB6E5, #FBC2EB, #FEE140);
+      background: linear-gradient(135deg, #1d2671, #c33764);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
       font-family: 'Poppins', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
+      color: #f0f0f0;
+      padding: 40px 20px;
     }
     @keyframes gradientBG {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-
-    /* Contenedor principal con efecto glassmorphism */
-    .container-result {
+    h2 {
+      font-size: 2.8rem;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #ffffff;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    h2::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -10px;
+      width: 150px;
+      height: 4px;
+      background: linear-gradient(90deg, #ff6a00, #ee0979);
+      border-radius: 2px;
+    }
+    /* Contenedor de tarjetas */
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1200px;
+    }
+    /* Tarjeta con efecto glassmorphism */
+    .card {
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(10px);
-      padding: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 15px;
-      width: 95%;  
-      max-width: 1500px; 
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-      text-align: center;
-      overflow: hidden;
-      max-height: 1200px;
-      overflow-y: auto;
-      animation: fadeIn 0.7s ease forwards;
-      transform: scale(0.9);
+      padding: 20px 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       opacity: 0;
+      transform: translateY(20px);
+      animation: cardAppear 0.8s forwards;
     }
-    @keyframes fadeIn {
-      to {
-        transform: scale(1);
-        opacity: 1;
-      }
+    @keyframes cardAppear {
+      to { opacity: 1; transform: translateY(0); }
     }
-    .container-result h2 {
-      font-size: 2.5rem;
-      margin-bottom: 30px;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    .card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
     }
-
-    .table-container {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      margin-top: 30px;
+    .card h3 {
+      margin: 0 0 15px 0;
+      font-size: 1.8rem;
+      color: #ffcc00;
+      text-transform: capitalize;
     }
-    .table-container table {
-      width: 48%; 
-      border-collapse: collapse;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      overflow: hidden;
+    .card p {
+      margin: 8px 0;
+      font-size: 1rem;
+      line-height: 1.5;
     }
-    table th, table td {
-      padding: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      text-align: center;
-      font-size: 1.1rem;
-      color: gray;
-      word-wrap: break-word;
-    }
-    table th {
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
+    .card span.label {
       font-weight: 600;
+      color: #ff6a00;
     }
-
     /* Botón de Calendario */
     .calendar-btn {
-      margin-top: 20px;
-      background: #3498db;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border-radius: 5px;
+      margin-top: 40px;
+      background: linear-gradient(90deg, #ff6a00, #ee0979);
+      color: #fff;
+      font-weight: 700;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 50px;
       cursor: pointer;
-      transition: background 0.3s, transform 0.2s;
-      font-size: 1rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1.1rem;
       text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
     }
     .calendar-btn:hover {
-      background: #2980b9;
       transform: scale(1.05);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
     }
     .calendar-btn:active {
-      transform: scale(0.95);
+      transform: scale(0.98);
     }
-
-    /* Sección de "No se encontraron registros" más vistosa */
-    .no-records-container {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-      animation: fadeIn 0.7s ease forwards;
-      transform: scale(0.9);
-      opacity: 0;
-      width: 90%;
-      max-width: 600px;
+    /* Sección sin registros */
+    .no-records {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
       text-align: center;
-      margin: 0 auto;
     }
-    .no-records-icon {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-    }
-    .no-records-message {
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    .no-records h3 {
+      color: #ff5252;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
     }
   </style>
 </head>
 <body>
 <?php
 if ($resultado->num_rows > 0) {
-    echo "<div class='container-result'>";
     echo "<h2>Datos del $fecha</h2>";
-    echo "<div class='table-container'>";
-
-    // Primera tabla: Fecha, Deporte, Insulina Lenta
-    echo "<table>";
-    echo "<tr><th>Fecha</th><th>Deporte</th><th>Insulina Lenta</th></tr>";
+    echo "<div class='cards-container'>";
     while ($fila = $resultado->fetch_assoc()) {
-        echo "<tr>
-                <td>{$fila['fecha']}</td>
-                <td>{$fila['deporte']} min</td>
-                <td>{$fila['lenta']} U</td>
-              </tr>";
+        echo "<div class='card'>";
+        echo "<h3>{$fila['fecha']}</h3>";
+        echo "<p><span class='label'>Deporte:</span> {$fila['deporte']} min</p>";
+        echo "<p><span class='label'>Insulina Lenta:</span> {$fila['lenta']} U</p>";
+        echo "<p><span class='label'>Tipo de Comida:</span> {$fila['tipo_comida']}</p>";
+        echo "<p><span class='label'>Glucosa 1h:</span> {$fila['gl_1h']} mg/dL</p>";
+        echo "<p><span class='label'>Glucosa 2h:</span> {$fila['gl_2h']} mg/dL</p>";
+        echo "<p><span class='label'>Raciones:</span> {$fila['raciones']}</p>";
+        echo "<p><span class='label'>Insulina Comida:</span> {$fila['insulina_comida']} U</p>";
+        echo "<p><span class='label'>Glucosa Hipo:</span> {$fila['glucosa_hipo']} mg/dL</p>";
+        echo "<p><span class='label'>Hora Hipo:</span> {$fila['hora_hipo']}</p>";
+        echo "<p><span class='label'>Glucosa Hiper:</span> {$fila['glucosa_hiper']} mg/dL</p>";
+        echo "<p><span class='label'>Hora Hiper:</span> {$fila['hora_hiper']}</p>";
+        echo "<p><span class='label'>Corrección Hiper:</span> {$fila['correccion_hiper']} U</p>";
+        echo "</div>";
     }
-    echo "</table>";
-
-    // Reiniciar puntero para segunda tabla
-    $resultado->data_seek(0);
-
-    // Segunda tabla: Tipo de comida, Glucosas, Raciones, Insulina, Hipo e Hiper
-    echo "<table>";
-    echo "<tr>
-            <th>Tipo de Comida</th>
-            <th>Glucosa 1h</th>
-            <th>Glucosa 2h</th>
-            <th>Raciones</th>
-            <th>Insulina Comida</th>
-            <th>Glucosa Hipo</th>
-            <th>Hora Hipo</th>
-            <th>Glucosa Hiper</th>
-            <th>Hora Hiper</th>
-            <th>Corrección Hiper</th>
-          </tr>";
-
-    while ($fila = $resultado->fetch_assoc()) {
-        // Definir color según tipo de comida
-        $colorTipoComida = match (strtolower($fila['tipo_comida'])) {
-            'desayuno' => 'gold',
-            'comida'   => 'orange',
-            'cena'     => 'lightcoral',
-            default    => 'white',
-        };
-        echo "<tr>
-                <td style='color: {$colorTipoComida}; font-weight: bold;'>{$fila['tipo_comida']}</td>
-                <td>{$fila['gl_1h']} mg/dL</td>
-                <td>{$fila['gl_2h']} mg/dL</td>
-                <td>{$fila['raciones']}</td>
-                <td>{$fila['insulina_comida']} U</td>
-                <td>{$fila['glucosa_hipo']} mg/dL</td>
-                <td>{$fila['hora_hipo']}</td>
-                <td>{$fila['glucosa_hiper']} mg/dL</td>
-                <td>{$fila['hora_hiper']}</td>
-                <td>{$fila['correccion_hiper']} U</td>
-              </tr>";
-    }
-    echo "</table>";
-
-    echo "</div>"; // .table-container
-    echo "</div>"; // .container-result
+    echo "</div>";
     echo '<a class="calendar-btn" href="calendario.php">📅 Calendario</a>';
 } else {
-    // Sección vistosa cuando no hay registros
-    echo '<div class="no-records-container">';
-    echo '<div class="no-records-icon">😕</div>';
-    echo '<h2 class="no-records-message">No se encontraron registros.</h2>';
+    echo "<div class='no-records'>";
+    echo "<h3>😕 No se encontraron registros.</h3>";
     echo '<a class="calendar-btn" href="calendario.php">📅 Calendario</a>';
-    echo '</div>';
+    echo "</div>";
 }
 
 $conn->close();
