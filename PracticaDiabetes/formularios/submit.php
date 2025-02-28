@@ -21,10 +21,11 @@ $correccion    = $_POST['correccion'] ?? null;
 $glucosa_hipo  = $_POST['glucosa_hipo'] ?? null;
 $hora_hipo     = $_POST['hora_hipo'] ?? null;
 
-if (empty($fecha) || empty($tipo_comida) || empty($gl_1h) || empty($gl_2h) || empty($raciones) || empty($insulina)) {
+if (!isset($fecha, $tipo_comida, $gl_1h, $gl_2h, $raciones, $insulina)) {
     header("Location: formulario.php?error=1");
     exit();
 }
+
 
 $id_usu = $_SESSION['id_usu'];
 
@@ -99,7 +100,6 @@ $conn->close();
     <title>Resultado del Envío</title>
     <link rel="stylesheet" href="../css/login.css">
     <style>
-        /* Cambiamos el nombre de la clase principal para resultados */
         .container-result {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
