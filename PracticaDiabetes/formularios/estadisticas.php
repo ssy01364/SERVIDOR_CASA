@@ -2,268 +2,234 @@
 session_start();
 
 if (!isset($_SESSION['id_usu'])) {
-    die("Por favor, inicia sesión para ver esta página.");
+    die("Acceso no autorizado.");
 }
 
-$id_usu = intval($_SESSION['id_usu']);
+$idUsuario = intval($_SESSION['id_usu']);
 
-include '../conexion.php';  
+include '../conexion.php';
 
-$mes = isset($_GET['mes']) ? $_GET['mes'] : date('m');
-$anio = isset($_GET['anio']) ? $_GET['anio'] : date('Y');
+$mesSeleccionado = isset($_GET['mes']) ? $_GET['mes'] : date('m');
+$anioSeleccionado = isset($_GET['anio']) ? $_GET['anio'] : date('Y');
 
-$promedio_glucosa_lenta = null;
+$datosGlucosa = [];
+$mensaje = "";
 
-$sql = "SELECT DAY(fecha) AS dia, lenta 
-        FROM CONTROL_GLUCOSA 
-        WHERE MONTH(fecha) = ? 
-          AND YEAR(fecha) = ? 
-          AND id_usu = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("iii", $mes, $anio, $id_usu);
+// Consultar los niveles de glucosa
+$query = "SELECT DAY(fecha) AS dia, lenta 
+          FROM CONTROL_GLUCOSA 
+          WHERE MONTH(fecha) = ? 
+            AND YEAR(fecha) = ? 
+            AND id_usu = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("iii", $mesSeleccionado, $anioSeleccionado, $idUsuario);
 $stmt->execute();
 $resultado = $stmt->get_result();
 
-if ($resultado->num_rows === 0) {
-    $mensaje = "No hay datos disponibles para el mes y año seleccionados.";
-} else {
-    // Creamos un array con los días del mes (1 a 31)
-    $dias = range(1, 31);
-    $niveles_glucosa = array_fill(0, 31, null);
+$sumaGlucosa = 0;
+$totalRegistros = 0;
 
-    $total_lenta = 0;
-    $dias_con_datos = 0;
-
-    while ($row = $resultado->fetch_assoc()) {
-        $dia_index = $row['dia'] - 1;
-        $niveles_glucosa[$dia_index] = $row['lenta'];
-
-        if ($row['lenta'] !== null) {
-            $total_lenta += $row['lenta'];
-            $dias_con_datos++;
-        }
-    }
-
-    $promedio_glucosa_lenta = ($dias_con_datos > 0) ? ($total_lenta / $dias_con_datos) : null;
+while ($fila = $resultado->fetch_assoc()) {
+    $datosGlucosa[] = ["x" => $fila['dia'], "y" => $fila['lenta']];
+    $sumaGlucosa += $fila['lenta'];
+    $totalRegistros++;
 }
 
+$promedioGlucosa = $totalRegistros > 0 ? $sumaGlucosa / $totalRegistros : null;
 $stmt->close();
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estadísticas de Glucosa</title>
-  <link rel="stylesheet" href="../css/login.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    /* Estilos específicos para la página de estadísticas */
-    .container-statistics {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      width: 95%;
-      max-width: 800px;
-      text-align: center;
-      color: white;
-      margin: 20px auto;
-      overflow: auto;
-      max-height: 1200px;
-    }
-    .container-statistics h2 {
-      margin-bottom: 20px;
-      font-size: 2.5rem;
-    }
-    .input-group {
-      margin: 15px 0;
-      text-align: left;
-    }
-    .input-group label {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 5px;
-    }
-    .input-group input {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      background: rgba(255,255,255,0.2);
-      color: white;
-      outline: none;
-    }
-    .input-group input::placeholder {
-      color: rgba(255,255,255,0.7);
-    }
-    /* Navegación para cambiar mes */
-    .nav-statistics {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-    }
-    .nav-statistics a {
-      text-decoration: none;
-      color: white;
-      background: #e67e22;
-      padding: 10px 15px;
-      border-radius: 5px;
-      font-size: 1.2rem;
-      transition: 0.3s;
-    }
-    .nav-statistics a:hover {
-      background: #d35400;
-    }
-    .nav-statistics a:active {
-      transform: scale(0.98);
-    }
-    /* Botón para menú principal */
-    .btn-statistics {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
-      text-decoration: none;
-      display: inline-block;
-      margin-top: 20px;
-    }
-    .btn-statistics:hover {
-      background-color: #2980b9;
-      transform: scale(1.05);
-    }
-    .btn-statistics:active {
-      background-color: #1f618d;
-      transform: scale(0.98);
-    }
-    /* Estilos para el canvas de la gráfica */
-    canvas {
-      margin-top: 30px;
-      max-width: 100%;
-    }
-    /* Promedio de glucosa */
-    .promedio-glucosa {
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas de Glucosa</title>
+    <link rel="stylesheet" href="../css/login.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(45deg, #2C3E50, #4CA1AF);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .estadisticas-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .estadisticas-box h2 {
+            margin-bottom: 15px;
+            font-size: 2.2rem;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .form-container label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .form-container input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            width: 80px;
+        }
+
+        .btn-estadisticas {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-estadisticas:hover {
+            background-color: #1e8449;
+            transform: scale(1.05);
+        }
+
+        .resultado-glucosa {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        canvas {
+            margin-top: 30px;
+            max-width: 100%;
+        }
+
+        .btn-volver {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 14px 22px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .btn-volver:hover {
+            background-color: #21618c;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
-  <div class="container-statistics">
-    <h2>Gráfica de Niveles de Glucosa</h2>
+
+<div class="estadisticas-box">
+    <h2>Reporte de Niveles de Glucosa</h2>
+
     <form method="GET" action="estadisticas.php">
-      <div class="input-group">
-        <label for="mes">Mes:</label>
-        <input type="number" name="mes" id="mes" value="<?php echo $mes; ?>" min="1" max="12" required>
-      </div>
-      <div class="input-group">
-        <label for="anio">Año:</label>
-        <input type="number" name="anio" id="anio" value="<?php echo $anio; ?>" min="2000" max="3000" required>
-      </div>
-      <button type="submit" class="login-btn">📊 Ver Estadísticas</button>
+        <div class="form-container">
+            <div>
+                <label for="mes">Mes:</label>
+                <input type="number" name="mes" id="mes" value="<?= $mesSeleccionado ?>" min="1" max="12" required>
+            </div>
+            <div>
+                <label for="anio">Año:</label>
+                <input type="number" name="anio" id="anio" value="<?= $anioSeleccionado ?>" min="2000" max="3000" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-estadisticas">📊 Consultar</button>
     </form>
 
-    <?php if (isset($promedio_glucosa_lenta) && $promedio_glucosa_lenta !== null): ?>
-      <div class="promedio-glucosa">
-        Promedio de Glucosa Lenta: <?php echo number_format($promedio_glucosa_lenta, 2); ?> mg/dL
-      </div>
+    <?php if ($promedioGlucosa !== null): ?>
+        <div class="resultado-glucosa">
+            Nivel Promedio de Glucosa: <?= number_format($promedioGlucosa, 2) ?> mg/dL
+        </div>
     <?php endif; ?>
 
-    <?php if (!empty($resultado) && $resultado->num_rows > 0): ?>
-      <canvas id="glucosaChart"></canvas>
-      <script>
-        const ctx = document.getElementById('glucosaChart').getContext('2d');
-        const dias = <?php echo json_encode($dias); ?>;
-        const nivelesGlucosa = <?php echo json_encode($niveles_glucosa); ?>;
-        const promedio = <?php echo ($promedio_glucosa_lenta !== null) ? $promedio_glucosa_lenta : 'null'; ?>;
+    <canvas id="graficaGlucosa"></canvas>
 
-        const glucosaChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: dias,
-            datasets: [{
-              label: 'Nivel de Glucosa Lenta',
-              data: nivelesGlucosa,
-              backgroundColor: '#f39c12',
-              borderColor: '#e67e22',
-              borderWidth: 1
-            }]
+    <a href="seleccionar.php" class="btn-volver">🏠 Menú Principal</a>
+</div>
+
+<script>
+  const ctx = document.getElementById('graficaGlucosa').getContext('2d');
+  const datosGlucosa = <?= json_encode($datosGlucosa) ?>;
+  const glucosaChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Nivel de Glucosa por Día',
+        data: datosGlucosa,
+        backgroundColor: 'rgba(231, 76, 60, 0.7)',
+        borderColor: '#e74c3c',
+        pointRadius: 6,
+        pointHoverRadius: 8,
+      }]
+    },
+    options: {
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: {
+            display: true,
+            text: 'Días del Mes',
+            color: '#fff',
+            font: { size: 14 }
           },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Nivel de Glucosa (mg/dL)',
-                  color: '#fff',
-                  font: {
-                    size: 14,
-                  }
-                },
-                ticks: {
-                  color: '#f39c12'
-                }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Días del Mes',
-                  color: '#fff',
-                  font: {
-                    size: 14,
-                  }
-                },
-                ticks: {
-                  color: '#f39c12'
-                }
-              }
-            },
-            plugins: {
-              annotation: {
-                annotations: {
-                  line1: {
-                    type: 'line',
-                    yMin: promedio,
-                    yMax: promedio,
-                    borderColor: 'red',
-                    borderWidth: 2,
-                    label: {
-                      content: 'Promedio: ' + promedio.toFixed(2),
-                      enabled: true,
-                      position: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                      font: {
-                        size: 12
-                      }
-                    }
-                  }
-                }
-              }
+          ticks: {
+            color: '#f1c40f',
+            maxRotation: 0,  // Asegura que los números estén en una sola fila
+            minRotation: 0,
+            callback: function(value) {
+              return Math.round(value); // Solo muestra números enteros
             }
+          },
+          grid: { display: false } // Oculta líneas verticales del grid
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Glucosa (mg/dL)',
+            color: '#fff',
+            font: { size: 14 }
+          },
+          ticks: { color: '#f1c40f' }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#f1c40f'
           }
-        });
-      </script>
-    <?php else: ?>
-      <div class="promedio-glucosa">
-        <?php echo $mensaje ?? "No hay datos disponibles."; ?>
-      </div>
-    <?php endif; ?>
+        }
+      }
+    }
+});
 
-    <div class="button-container">
-      <a href="seleccionar.php" class="btn-statistics">📋 Menú Principal</a>
-    </div>
-  </div>
+</script>
+
 </body>
 </html>

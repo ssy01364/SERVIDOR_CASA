@@ -1,189 +1,191 @@
-<?php 
+<?php
 session_start();
 
 if (!isset($_SESSION['id_usu'])) {
-    die("Usuario no autenticado.");
+    exit("Acceso denegado.");
 }
-$id_usu = intval($_SESSION['id_usu']);
 
-include '../conexion.php';  
+$usuarioID = intval($_SESSION['id_usu']);
 
-$mes = isset($_GET['mes']) ? $_GET['mes'] : date('m');
-$anio = isset($_GET['anio']) ? $_GET['anio'] : date('Y');
+include '../conexion.php';
 
-$primerDia = date('Y-m-01', strtotime("$anio-$mes-01"));
-$ultimoDia = date('Y-m-t', strtotime("$anio-$mes-01"));
+$mesSeleccionado = isset($_GET['mes']) ? $_GET['mes'] : date('m');
+$anioSeleccionado = isset($_GET['anio']) ? $_GET['anio'] : date('Y');
 
-// Consulta unificada de fechas y tipos
-$sql = "SELECT fecha, 'Glucosa' AS tipo FROM CONTROL_GLUCOSA WHERE id_usu = $id_usu
-        UNION 
-        SELECT fecha, 'Comida' FROM COMIDA WHERE id_usu = $id_usu
-        UNION 
-        SELECT fecha, 'Hiperglucemia' FROM HIPERGLUCEMIA WHERE id_usu = $id_usu
-        UNION 
-        SELECT fecha, 'Hipoglucemia' FROM HIPOGLUCEMIA WHERE id_usu = $id_usu";
+$primerDia = date('Y-m-01', strtotime("$anioSeleccionado-$mesSeleccionado-01"));
+$diasEnMes = date('t', strtotime($primerDia));
 
-$resultado = $conn->query($sql);
-$eventos = [];
+// Obtener eventos registrados en la base de datos
+$queryEventos = "SELECT fecha, 'Glucosa' AS tipo FROM CONTROL_GLUCOSA WHERE id_usu = $usuarioID
+                 UNION 
+                 SELECT fecha, 'Comida' FROM COMIDA WHERE id_usu = $usuarioID
+                 UNION 
+                 SELECT fecha, 'Hiperglucemia' FROM HIPERGLUCEMIA WHERE id_usu = $usuarioID
+                 UNION 
+                 SELECT fecha, 'Hipoglucemia' FROM HIPOGLUCEMIA WHERE id_usu = $usuarioID";
+
+$resultado = $conn->query($queryEventos);
+$eventosRegistrados = [];
 
 if ($resultado && $resultado->num_rows > 0) {
-    while ($row = $resultado->fetch_assoc()) {
-        $eventos[$row['fecha']][] = $row['tipo'];
+    while ($fila = $resultado->fetch_assoc()) {
+        $eventosRegistrados[$fila['fecha']][] = $fila['tipo'];
     }
 }
 
-// Calcular el día de la semana del primer día y la cantidad de días del mes
-$diaSemana = date('N', strtotime($primerDia));
-$diasMes = date('t', strtotime($primerDia));
+// Obtener el primer día de la semana (1 = Lunes, 7 = Domingo)
+$inicioSemana = date('N', strtotime($primerDia));
 
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendario Diabetes</title>
-  <!-- Se vincula el mismo archivo CSS que en login.css para mantener la paleta y estilos -->
-  <link rel="stylesheet" href="../css/login.css">
-  <!-- Estilos adicionales para el calendario -->
-  <style>
-    .container-calendar {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      width: 90%;
-      max-width: 800px;
-      text-align: center;
-      color: white;
-      margin: 20px auto;
-    }
-    .container-calendar h1 {
-      margin-bottom: 20px;
-      font-size: 24px;
-    }
-    .nav-calendar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-    }
-    .nav-calendar a {
-      text-decoration: none;
-      color: white;
-      background: #e67e22;
-      padding: 10px 15px;
-      border-radius: 5px;
-      font-size: 1.2rem;
-      transition: 0.3s;
-    }
-    .nav-calendar a:hover {
-      background: #d35400;
-    }
-    .nav-calendar a:active {
-      transform: scale(0.98);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 15px;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    th {
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-    }
-    td {
-      cursor: pointer;
-    }
-    td:hover {
-      background-color: #3f7cac;
-      transition: 0.3s ease;
-    }
-    td a {
-      color: #f39c12; 
-      font-size: 1.5rem;
-      text-decoration: none;
-      display: block;
-      padding: 10px;
-      transition: transform 0.1s ease, color 0.3s ease;
-    }
-    td a:hover {
-      background-color: #f39c12;
-      color: #fff;
-    }
-    td a:active {
-      transform: scale(0.95);
-      color: #fff;
-    }
-    .button-container {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .choose-btn {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-    .choose-btn:hover {
-      background-color: #2980b9;
-      transform: scale(1.05);
-    }
-    .choose-btn:active {
-      background-color: #1f618d;
-      transform: scale(0.98);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Registro</title>
+    <link rel="stylesheet" href="../css/login.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #FFDEE9, #B5FFFC);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .calendario-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .mes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .mes-header h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #333;
+        }
+
+        .btn-mes {
+            background-color: #ff7eb3;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .btn-mes:hover {
+            background-color: #ff4d80;
+        }
+
+        .grid-calendario {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .dia-nombre {
+            font-weight: bold;
+            color: #555;
+            background: #f2f2f2;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .dia-celda {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #444;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dia-celda:hover {
+            background: #ffeb3b;
+        }
+
+        .evento-icono {
+            font-size: 14px;
+            display: block;
+            margin-top: 5px;
+            color: #ff5722;
+        }
+
+        .boton-menu {
+            background-color: #2196f3;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 18px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .boton-menu:hover {
+            background-color: #1976d2;
+        }
+    </style>
 </head>
 <body>
-  <div class="container-calendar">
-    <div class="nav-calendar">
-      <a href="?mes=<?= ($mes == 1) ? 12 : $mes - 1 ?>&anio=<?= ($mes == 1) ? $anio - 1 : $anio ?>">◀ Mes Anterior</a>
-      <h1><?= date("F Y", strtotime($primerDia)) ?></h1>
-      <a href="?mes=<?= ($mes == 12) ? 1 : $mes + 1 ?>&anio=<?= ($mes == 12) ? $anio + 1 : $anio ?>">Mes Siguiente ▶</a>
+
+<div class="calendario-container">
+    <div class="mes-header">
+        <a href="?mes=<?= ($mesSeleccionado == 1) ? 12 : $mesSeleccionado - 1 ?>&anio=<?= ($mesSeleccionado == 1) ? $anioSeleccionado - 1 : $anioSeleccionado ?>" class="btn-mes">⬅</a>
+        <h2><?= date("F Y", strtotime($primerDia)) ?></h2>
+        <a href="?mes=<?= ($mesSeleccionado == 12) ? 1 : $mesSeleccionado + 1 ?>&anio=<?= ($mesSeleccionado == 12) ? $anioSeleccionado + 1 : $anioSeleccionado ?>" class="btn-mes">➡</a>
     </div>
-    <table>
-      <tr>
-        <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th>
-      </tr>
-      <tr>
-      <?php
-        // Rellenar los días en blanco antes del primer día
-        for ($i = 1; $i < $diaSemana; $i++) {
-            echo "<td></td>";
+
+    <div class="grid-calendario">
+        <div class="dia-nombre">Lun</div>
+        <div class="dia-nombre">Mar</div>
+        <div class="dia-nombre">Mié</div>
+        <div class="dia-nombre">Jue</div>
+        <div class="dia-nombre">Vie</div>
+        <div class="dia-nombre">Sáb</div>
+        <div class="dia-nombre">Dom</div>
+
+        <?php
+        for ($i = 1; $i < $inicioSemana; $i++) {
+            echo "<div></div>";
         }
-        // Mostrar los días del mes
-        for ($dia = 1; $dia <= $diasMes; $dia++) {
-            $fecha_actual = "$anio-$mes-" . str_pad($dia, 2, "0", STR_PAD_LEFT);
-            echo "<td>";
-            echo "<a href='datos.php?fecha=$fecha_actual'><strong>$dia</strong></a>";
-            echo "</td>";
-            // Si es el final de la semana, nueva fila
-            if ((($dia + $diaSemana - 1) % 7) == 0) {
-                echo "</tr><tr>";
+
+        for ($dia = 1; $dia <= $diasEnMes; $dia++) {
+            $fecha = "$anioSeleccionado-$mesSeleccionado-" . str_pad($dia, 2, "0", STR_PAD_LEFT);
+            $eventoIcono = "";
+
+            if (isset($eventosRegistrados[$fecha])) {
+                $eventoIcono = "<span class='evento-icono'>🔴 Evento</span>";
             }
+
+            echo "<div class='dia-celda' onclick=\"window.location='datos.php?fecha=$fecha'\">";
+            echo "$dia $eventoIcono";
+            echo "</div>";
         }
-        // Rellenar los días en blanco hasta completar la última fila
-        while ((($dia + $diaSemana - 1) % 7) != 1) {
-            echo "<td></td>";
-            $dia++;
-        }
-      ?>
-      </tr>
-    </table>
-    <div class="button-container">
-      <button type="button" class="choose-btn" onclick="window.location.href='seleccionar.php'">📋 Menú Principal</button>
+        ?>
     </div>
-  </div>
+
+    <a class="boton-menu" href="seleccionar.php">🏠 Menú </a>
+</div>
+
 </body>
 </html>
