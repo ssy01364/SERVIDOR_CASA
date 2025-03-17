@@ -183,6 +183,8 @@ $conn->close();
         ?>
     </div>
     <a class="boton-menu" href="seleccionar.php">🏠 Menú</a>
+    <a class="boton-menu" href="modificar.php">✏️ Modificar</a>
+    <a class="boton-menu" href="borrar.php">🗑️ Borrar</a>
 </div>
 </body>
 </html>
