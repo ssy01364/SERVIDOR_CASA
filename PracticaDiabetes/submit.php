@@ -5,7 +5,7 @@ if (!isset($_SESSION['id_usu'])) {
     die("Error: Usuario no autenticado.");
 }
 
-include '../conexion.php';
+include 'conexion.php';
 
 $fecha         = $_POST['fecha'];
 $deporte       = $_POST['deporte'];
@@ -28,8 +28,6 @@ if (!isset($fecha, $tipo_comida, $gl_1h, $gl_2h, $raciones, $insulina)) {
 
 
 $id_usu = $_SESSION['id_usu'];
-
-// Inserta en CONTROL_GLUCOSA si no existe registro para la fecha
 $sql_check_control = "SELECT * FROM CONTROL_GLUCOSA WHERE fecha = '$fecha' AND id_usu = $id_usu";
 $result_check_control = $conn->query($sql_check_control);
 if ($result_check_control->num_rows == 0) {
@@ -40,7 +38,6 @@ if ($result_check_control->num_rows == 0) {
     }
 }
 
-// Inserta en COMIDA si no existe registro para ese tipo de comida en la fecha
 $sql_check_comida = "SELECT * FROM COMIDA 
                      WHERE fecha = '$fecha' AND tipo_comida = '$tipo_comida' AND id_usu = $id_usu";
 $result_check_comida = $conn->query($sql_check_comida);
@@ -58,7 +55,6 @@ if ($result_check_comida->num_rows == 0) {
     $color_mensaje = "red";
 }
 
-// Inserta en HIPERGLUCEMIA si se proporcionan datos y no existe registro
 if (!empty($glucosa_hiper) && !empty($hora_hiper) && !empty($correccion)) {
     $sql_check_hiper = "SELECT * FROM HIPERGLUCEMIA WHERE fecha = '$fecha' AND tipo_comida = '$tipo_comida' AND id_usu = $id_usu";
     $result_check_hiper = $conn->query($sql_check_hiper);
@@ -74,7 +70,6 @@ if (!empty($glucosa_hiper) && !empty($hora_hiper) && !empty($correccion)) {
     }
 }
 
-// Inserta en HIPOGLUCEMIA si se proporcionan datos y no existe registro
 if (!empty($glucosa_hipo) && !empty($hora_hipo)) {
     $sql_check_hipo = "SELECT * FROM HIPOGLUCEMIA WHERE fecha = '$fecha' AND tipo_comida = '$tipo_comida' AND id_usu = $id_usu";
     $result_check_hipo = $conn->query($sql_check_hipo);
@@ -98,7 +93,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultado del Envío</title>
-    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="login.css">
     <style>
         .container-result {
             background: rgba(255, 255, 255, 0.1);

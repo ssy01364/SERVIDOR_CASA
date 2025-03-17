@@ -1,26 +1,21 @@
 <?php 
 session_start();
 
-// Verificar sesión activa
 if (!isset($_SESSION['id_usu'])) {
     die("Acceso no autorizado.");
 }
 
 $idUsuario = intval($_SESSION['id_usu']);
 
-// Conexión a la base de datos
-require_once '../conexion.php';
+require_once 'conexion.php';
 
-// Obtener y validar parámetros de mes y año
 $mesSeleccionado = isset($_GET['mes']) ? intval($_GET['mes']) : intval(date('m'));
 $anioSeleccionado = isset($_GET['anio']) ? intval($_GET['anio']) : intval(date('Y'));
 
-// Inicialización de variables
 $datosGlucosa = [];
 $sumaGlucosa = 0;
 $totalRegistros = 0;
 
-// Preparar la consulta para obtener los niveles de glucosa
 $query = "SELECT DAY(fecha) AS dia, lenta 
           FROM CONTROL_GLUCOSA 
           WHERE MONTH(fecha) = ? 
@@ -31,7 +26,6 @@ $stmt->bind_param("iii", $mesSeleccionado, $anioSeleccionado, $idUsuario);
 $stmt->execute();
 $resultado = $stmt->get_result();
 
-// Recopilar datos y calcular el promedio
 while ($fila = $resultado->fetch_assoc()) {
     $datosGlucosa[] = ["x" => $fila['dia'], "y" => $fila['lenta']];
     $sumaGlucosa += $fila['lenta'];
@@ -50,12 +44,10 @@ $conn->close();
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estadísticas de Glucosa</title>
-  <!-- Fuentes de Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <!-- CSS personalizado -->
-  <link rel="stylesheet" href="../css/login.css">
+  <link rel="stylesheet" href="login.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {

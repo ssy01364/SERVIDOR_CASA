@@ -7,19 +7,17 @@ if (!isset($_SESSION['id_usu'])) {
 
 $usuarioID = intval($_SESSION['id_usu']);
 
-include '../conexion.php';
+include 'conexion.php';
 
-// Convertir a entero y formatear con dos dígitos
 $mesSeleccionado = isset($_GET['mes']) ? intval($_GET['mes']) : date('m');
 $anioSeleccionado = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
 
-// Aseguramos que el mes tenga dos dígitos
+
 $mesPadded = str_pad($mesSeleccionado, 2, "0", STR_PAD_LEFT);
 
 $primerDia = "$anioSeleccionado-$mesPadded-01";
 $diasEnMes = date('t', strtotime($primerDia));
 
-// Consulta filtrada por mes y año
 $queryEventos = "SELECT fecha, 'Glucosa' AS tipo
                  FROM CONTROL_GLUCOSA
                  WHERE id_usu = $usuarioID
@@ -53,7 +51,6 @@ if ($resultado && $resultado->num_rows > 0) {
     }
 }
 
-// Determinar el primer día de la semana (1 = Lunes, 7 = Domingo)
 $inicioSemana = date('N', strtotime($primerDia));
 
 $conn->close();
@@ -168,11 +165,11 @@ $conn->close();
         <div class="dia-nombre">Sáb</div>
         <div class="dia-nombre">Dom</div>
         <?php
-        // Rellenar las celdas vacías hasta el primer día real
+
         for ($i = 1; $i < $inicioSemana; $i++) {
             echo "<div></div>";
         }
-        // Mostrar los días del mes
+        
         for ($dia = 1; $dia <= $diasEnMes; $dia++) {
             $fecha = "$anioSeleccionado-$mesPadded-" . str_pad($dia, 2, "0", STR_PAD_LEFT);
             $eventoIcono = "";

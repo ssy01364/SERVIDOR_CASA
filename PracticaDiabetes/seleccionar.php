@@ -11,7 +11,7 @@ $usuario = htmlspecialchars($_SESSION['usuario']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú Principal</title>
-    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="login.css">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -122,7 +122,7 @@ $usuario = htmlspecialchars($_SESSION['usuario']);
         </a>
     </div>
 
-    <button class="cerrar-sesion" onclick="window.location.href='../index.php';">🔒 Cerrar Sesión</button>
+    <button class="cerrar-sesion" onclick="window.location.href='index.php';">🔒 Cerrar Sesión</button>
 </div>
 
 </body>

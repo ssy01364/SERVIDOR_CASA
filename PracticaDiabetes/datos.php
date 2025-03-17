@@ -5,7 +5,7 @@ if (!isset($_SESSION['id_usu'])) {
     die("No estás logueado.");
 }
 
-include '../conexion.php';
+include 'conexion.php';
 
 $id_usu = intval($_SESSION['id_usu']);
 $fecha = isset($_GET['fecha']) ? $_GET['fecha'] : date('Y-m-d');

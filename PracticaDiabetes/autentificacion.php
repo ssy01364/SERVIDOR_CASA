@@ -26,7 +26,7 @@ if ($result->num_rows > 0) {
         $_SESSION['usuario'] = $usuario;
         $_SESSION['id_usu'] = $usuario_data['id_usu'];
 
-        header("Location: formularios/seleccionar.php");
+        header("Location: seleccionar.php");
         exit();
     } else {
         $error_message = "Contraseña incorrecta.";
