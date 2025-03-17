@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       background-color: #e0a800;
     }
 
-    .btn-regresar {
+    .btn-regresar, .btn-menu {
       display: block;
       width: 100%;
       text-align: center;
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       transition: 0.3s ease;
     }
 
-    .btn-regresar:hover {
+    .btn-regresar:hover, .btn-menu:hover {
       background-color: #0056b3;
     }
 
@@ -218,6 +218,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
       <a href="modificar.php" class="btn-regresar">Buscar otra comida</a>
     <?php endif; ?>
+    <a href="seleccionar.php" class="btn-menu">🏠 Menú</a>
+
   </div>
 </body>
 </html>
