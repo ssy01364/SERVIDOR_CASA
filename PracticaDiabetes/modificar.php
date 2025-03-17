@@ -1,8 +1,9 @@
 <?php
 include 'conexion.php';
 
-$mensaje_modificacion = "";
-$mostrarFormulario = true;
+$mensaje = "";
+$mostrarBusqueda = true; // Controla si se muestra el formulario de búsqueda
+$mostrarFormulario = false; // Controla si se muestra el formulario de modificación/eliminación
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $fecha = $_POST['fecha'] ?? '';
@@ -15,9 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $resultado = $stmt->get_result();
         $comida = $resultado->fetch_assoc();
 
-        if (!$comida) {
-            $mensaje_modificacion = "<p class='message error-message'>No se encontraron datos para la fecha y tipo de comida ingresados.</p>";
-            $mostrarFormulario = false;
+        if ($comida) {
+            $mostrarBusqueda = false; // Oculta el formulario de búsqueda
+            $mostrarFormulario = true; // Muestra el formulario de modificación/eliminación
+        } else {
+            $mensaje = "<p class='message error-message'>No se encontraron datos para la fecha y tipo de comida ingresados.</p>";
         }
     } elseif (isset($_POST['modificar'])) {
         $gl_1h = $_POST['gl_1h'];
@@ -30,10 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->bind_param("iiiissi", $gl_1h, $gl_2h, $raciones, $insulina, $fecha, $tipo_comida, $id_usu);
 
         if ($stmt->execute()) {
-            $mensaje_modificacion = "<p class='message success-message'>Registro actualizado con éxito.</p>";
-            $mostrarFormulario = false; // Ocultar el formulario después de la modificación
+            $mensaje = "<p class='message success-message'>Registro actualizado con éxito.</p>";
+            $mostrarFormulario = false; // Ocultar el formulario de modificación tras actualizar
         } else {
-            $mensaje_modificacion = "<p class='message error-message'>Error al actualizar: " . $conn->error . "</p>";
+            $mensaje = "<p class='message error-message'>Error al actualizar: " . $conn->error . "</p>";
         }
     }
 }
@@ -180,14 +183,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <div class="container-form">
     <h1>Modificar o Eliminar Registro de Comida</h1>
     
-    <?php
-      if (!empty($mensaje_modificacion)) {
-          echo $mensaje_modificacion;
-          echo '<a href="modificar.php" class="btn-regresar">Buscar otra comida</a>';
-      }
-    ?>
+    <?= $mensaje ?>
 
-    <?php if ($mostrarFormulario): ?>
+    <?php if ($mostrarBusqueda): ?>
       <form method="post">
         <label>Fecha:</label>
         <input type="date" name="fecha" required>
@@ -197,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </form>
     <?php endif; ?>
 
-    <?php if (!empty($comida) && $mostrarFormulario): ?>
+    <?php if ($mostrarFormulario): ?>
       <form method="post">
         <input type="hidden" name="fecha" value="<?= $comida['fecha'] ?>">
         <input type="hidden" name="tipo_comida" value="<?= $comida['tipo_comida'] ?>">
@@ -217,6 +215,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <button type="submit" name="modificar" class="btn-modificar">Modificar</button>
       </form>
+
+      <a href="modificar.php" class="btn-regresar">Buscar otra comida</a>
     <?php endif; ?>
   </div>
 </body>
