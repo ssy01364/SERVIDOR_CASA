@@ -2,8 +2,10 @@
 include 'conexion.php';
 
 $mensaje = "";
-$mostrarBusqueda = true; // Controla si se muestra el formulario de búsqueda
-$mostrarFormulario = false; // Controla si se muestra el formulario de modificación/eliminación
+$mostrarBusqueda = true;
+$mostrarFormulario = false;
+$fecha = "";
+$tipo_comida = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $fecha = $_POST['fecha'] ?? '';
@@ -17,8 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $comida = $resultado->fetch_assoc();
 
         if ($comida) {
-            $mostrarBusqueda = false; // Oculta el formulario de búsqueda
-            $mostrarFormulario = true; // Muestra el formulario de modificación/eliminación
+            $mostrarBusqueda = false;
+            $mostrarFormulario = true;
         } else {
             $mensaje = "<p class='message error-message'>No se encontraron datos para la fecha y tipo de comida ingresados.</p>";
         }
@@ -34,9 +36,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if ($stmt->execute()) {
             $mensaje = "<p class='message success-message'>Registro actualizado con éxito.</p>";
-            $mostrarFormulario = false; // Ocultar el formulario de modificación tras actualizar
+            $mostrarFormulario = false;
         } else {
             $mensaje = "<p class='message error-message'>Error al actualizar: " . $conn->error . "</p>";
+        }
+    } elseif (isset($_POST['borrar'])) {
+        $id_usu = $_POST['id_usu'];
+
+        // Eliminar solo el registro de COMIDA según la fecha, tipo de comida e id_usu
+        $stmt = $conn->prepare("DELETE FROM COMIDA WHERE fecha = ? AND tipo_comida = ? AND id_usu = ?");
+        $stmt->bind_param("ssi", $fecha, $tipo_comida, $id_usu);
+
+        if ($stmt->execute()) {
+            if ($stmt->affected_rows > 0) {
+                $mensaje = "<p class='message success-message'>Se eliminó la comida '$tipo_comida' del día '$fecha'.</p>";
+                $mostrarFormulario = false; // Ocultar formulario después de eliminar
+            } else {
+                $mensaje = "<p class='message error-message'>No se encontró la comida especificada para eliminar.</p>";
+            }
+        } else {
+            $mensaje = "<p class='message error-message'>Error al eliminar la comida: " . $conn->error . "</p>";
         }
     }
 }
@@ -148,6 +167,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       background-color: #e0a800;
     }
 
+    .btn-borrar {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .btn-borrar:hover {
+      background-color: #c82333;
+    }
+
     .btn-regresar, .btn-menu {
       display: block;
       width: 100%;
@@ -214,12 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <input type="number" name="insulina" value="<?= $comida['insulina'] ?>" required>
 
         <button type="submit" name="modificar" class="btn-modificar">Modificar</button>
+        <button type="submit" name="borrar" class="btn-borrar">Eliminar</button>
       </form>
 
       <a href="modificar.php" class="btn-regresar">Buscar otra comida</a>
     <?php endif; ?>
-    <a href="seleccionar.php" class="btn-menu">🏠 Menú</a>
 
+    <a href="seleccionar.php" class="btn-menu">🏠 Menú</a>
   </div>
 </body>
 </html>

@@ -65,7 +65,23 @@
       margin-bottom: 15px;
       font-weight: bold;
     }
-
+     /* Mensaje de error arriba de la pantalla */
+  #error-tipo-comida {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(255, 0, 0, 0.9);
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 15px;
+    font-size: 18px;
+    display: none; /* Se oculta por defecto */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 9999; /* Asegura que esté por encima de todo */
+  }
+   
     /* ------------------------
        SECCIONES DEL FORMULARIO
     ------------------------ */
@@ -341,6 +357,31 @@
   </div>
 
   <script>
+     document.addEventListener("DOMContentLoaded", function() {
+    // Botones de tipo de comida
+    document.querySelectorAll('.btn-food').forEach(button => {
+      button.addEventListener('click', () => {
+        // Reestablecer color de todos los botones
+        document.querySelectorAll('.btn-food').forEach(btn => btn.style.backgroundColor = '#ffeb3b');
+        // Marcar el botón actual
+        button.style.backgroundColor = '#ffc107';
+        // Asignar valor al input hidden
+        document.getElementById('tipo_comida').value = button.dataset.value;
+        // Ocultar mensaje de error si ya se seleccionó un tipo de comida
+        document.getElementById('error-tipo-comida').style.display = 'none';
+      });
+    });
+
+    // Validación antes de enviar el formulario
+    document.querySelector("form").addEventListener("submit", function(event) {
+      let tipoComida = document.getElementById('tipo_comida').value;
+
+      if (!tipoComida) {
+        event.preventDefault(); // Evita que el formulario se envíe
+        document.getElementById('error-tipo-comida').style.display = 'block';
+      }
+    });
+  });
     // Botones de tipo de comida
     document.querySelectorAll('.btn-food').forEach(button => {
       button.addEventListener('click', () => {
@@ -360,5 +401,10 @@
       document.getElementById('hipoglucemia').classList.toggle('active', selectedEvent === 'hipoglucemia');
     });
   </script>
+  
+  <!-- Mensaje de error para tipo de comida -->
+<p id="error-tipo-comida" style="color: white; display: none; text-align: center; font-weight: bold;">
+  ⚠️ Debes seleccionar un tipo de comida antes de continuar.
+</p>
 </body>
 </html>
