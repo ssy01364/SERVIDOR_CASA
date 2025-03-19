@@ -57,6 +57,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             $mensaje = "<p class='message error-message'>Error al eliminar la comida: " . $conn->error . "</p>";
         }
+        if ($stmt->affected_rows > 0) {
+          // 2️⃣ Comprobar si quedan más comidas para ese día y usuario
+          $stmt = $conn->prepare("SELECT COUNT(*) FROM COMIDA WHERE fecha = ? AND id_usu = ?");
+          $stmt->bind_param("si", $fecha, $id_usu);
+          $stmt->execute();
+          $stmt->bind_result($cantidad_comidas);
+          $stmt->fetch();
+          $stmt->close();
+
+          // 3️⃣ Si ya no hay comidas, eliminar CONTROL_GLUCOSA de ese día
+          if ($cantidad_comidas == 0) {
+              $stmt = $conn->prepare("DELETE FROM CONTROL_GLUCOSA WHERE fecha = ? AND id_usu = ?");
+              $stmt->bind_param("si", $fecha, $id_usu);
+              $stmt->execute();
+              $mensaje = "<p class='message success-message'>Se eliminó la comida '$tipo_comida' y, al no quedar más comidas, también se eliminó el registro de CONTROL_GLUCOSA del '$fecha'.</p>";
+          } else {
+              $mensaje = "<p class='message success-message'>Se eliminó la comida '$tipo_comida' del '$fecha'.</p>";
+          }
+          $mostrarFormulario = false;
+      } else {
+          $mensaje = "<p class='message error-message'>No se encontró la comida especificada para eliminar.</p>";
+      }
     }
 }
 ?>

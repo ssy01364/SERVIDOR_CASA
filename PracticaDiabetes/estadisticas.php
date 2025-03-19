@@ -1,4 +1,4 @@
-<?php 
+<?php
 session_start();
 
 if (!isset($_SESSION['id_usu'])) {
@@ -9,30 +9,38 @@ $idUsuario = intval($_SESSION['id_usu']);
 
 require_once 'conexion.php';
 
-$mesSeleccionado = isset($_GET['mes']) ? intval($_GET['mes']) : intval(date('m'));
-$anioSeleccionado = isset($_GET['anio']) ? intval($_GET['anio']) : intval(date('Y'));
+// Validar mes y año seleccionados
+$mesSeleccionado = isset($_GET['mes']) ? filter_var($_GET['mes'], FILTER_VALIDATE_INT, ["options" => ["min_range" => 1, "max_range" => 12]]) : date('m');
+$anioSeleccionado = isset($_GET['anio']) ? filter_var($_GET['anio'], FILTER_VALIDATE_INT, ["options" => ["min_range" => 2000, "max_range" => 3000]]) : date('Y');
 
-$datosGlucosa = [];
-$sumaGlucosa = 0;
+$datosInsulina = [];
+$sumaInsulina = 0;
 $totalRegistros = 0;
 
-$query = "SELECT DAY(fecha) AS dia, lenta 
-          FROM CONTROL_GLUCOSA 
-          WHERE MONTH(fecha) = ? 
-            AND YEAR(fecha) = ? 
-            AND id_usu = ?";
+// Consulta para sumar insulina por día (incluye insulina de CONTROL_GLUCOSA y COMIDA)
+$query = "SELECT DAY(cg.fecha) AS dia, 
+                 SUM(cg.lenta + IFNULL(c.insulina, 0)) AS total_insulina
+          FROM CONTROL_GLUCOSA cg
+          LEFT JOIN COMIDA c ON cg.fecha = c.fecha AND cg.id_usu = c.id_usu
+          WHERE MONTH(cg.fecha) = ? 
+            AND YEAR(cg.fecha) = ? 
+            AND cg.id_usu = ?
+          GROUP BY DAY(cg.fecha)
+          ORDER BY dia ASC";
+
 $stmt = $conn->prepare($query);
 $stmt->bind_param("iii", $mesSeleccionado, $anioSeleccionado, $idUsuario);
 $stmt->execute();
 $resultado = $stmt->get_result();
+$registros = $resultado->fetch_all(MYSQLI_ASSOC);
 
-while ($fila = $resultado->fetch_assoc()) {
-    $datosGlucosa[] = ["x" => $fila['dia'], "y" => $fila['lenta']];
-    $sumaGlucosa += $fila['lenta'];
+foreach ($registros as $fila) {
+    $datosInsulina[] = ["x" => $fila['dia'], "y" => $fila['total_insulina']];
+    $sumaInsulina += $fila['total_insulina'];
     $totalRegistros++;
 }
 
-$promedioGlucosa = $totalRegistros > 0 ? $sumaGlucosa / $totalRegistros : null;
+$promedioInsulina = $totalRegistros > 0 ? round($sumaInsulina / $totalRegistros, 2) : null;
 
 $stmt->close();
 $conn->close();
@@ -43,30 +51,24 @@ $conn->close();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estadísticas de Glucosa</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="login.css">
+  <title>Estadísticas de Insulina</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; font-family: 'Roboto', sans-serif; }
     body {
-      font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, #2C3E50, #4CA1AF);
-      margin: 0;
-      padding: 20px;
       color: #f9f9f9;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 20px;
+      margin: 0;
     }
     .container {
       background: rgba(0, 0, 0, 0.3);
-      padding: 30px 40px;
+      padding: 30px;
       border-radius: 15px;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
       max-width: 900px;
@@ -79,7 +81,7 @@ $conn->close();
       to { opacity: 1; transform: scale(1); }
     }
     h2 {
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       font-size: 2.4rem;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
@@ -107,23 +109,36 @@ $conn->close();
       width: 100px;
       font-size: 1rem;
     }
-    .btn-estadisticas {
-      background-color: #27ae60;
-      color: #fff;
-      border: none;
+    .btn {
       padding: 12px 20px;
       font-size: 1.1rem;
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
+      transition: 0.3s ease-in-out;
+      border: none;
+    }
+    .btn-estadisticas {
+      background-color: #27ae60;
+      color: #fff;
       margin-top: 10px;
     }
     .btn-estadisticas:hover {
       background-color: #1e8449;
       transform: scale(1.05);
     }
-    .resultado-glucosa {
+    .btn-volver {
+      background-color: #2980b9;
+      color: #fff;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 25px;
+    }
+    .btn-volver:hover {
+      background-color: #21618c;
+      transform: scale(1.05);
+    }
+    .resultado-insulina {
       margin: 20px auto;
       font-size: 1.2rem;
       font-weight: bold;
@@ -136,104 +151,56 @@ $conn->close();
       margin-top: 30px;
       max-width: 100%;
     }
-    .btn-volver {
-      background-color: #2980b9;
-      color: #fff;
-      border: none;
-      padding: 14px 26px;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      margin-top: 25px;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-    .btn-volver:hover {
-      background-color: #21618c;
-      transform: scale(1.05);
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Reporte de Niveles de Glucosa</h2>
+    <h2>📊 Estadísticas de Insulina</h2>
     <form method="GET" action="estadisticas.php">
       <div class="form-container">
         <div class="form-group">
           <label for="mes">Mes:</label>
-          <input type="number" name="mes" id="mes" value="<?= htmlspecialchars($mesSeleccionado) ?>" min="1" max="12" required>
+          <input type="number" name="mes" id="mes" value="<?= $mesSeleccionado ?>" min="1" max="12" required>
         </div>
         <div class="form-group">
           <label for="anio">Año:</label>
-          <input type="number" name="anio" id="anio" value="<?= htmlspecialchars($anioSeleccionado) ?>" min="2000" max="3000" required>
+          <input type="number" name="anio" id="anio" value="<?= $anioSeleccionado ?>" min="2000" max="3000" required>
         </div>
       </div>
-      <button type="submit" class="btn-estadisticas">📊 Consultar</button>
+      <button type="submit" class="btn btn-estadisticas">📊 Consultar</button>
     </form>
 
-    <?php if ($promedioGlucosa !== null): ?>
-      <div class="resultado-glucosa">
-        Nivel Promedio de Glucosa: <?= number_format($promedioGlucosa, 2) ?> mg/dL
+    <?php if ($promedioInsulina !== null): ?>
+      <div class="resultado-insulina">
+        Promedio diario de Insulina: <?= number_format($promedioInsulina, 2) ?> UI
       </div>
     <?php endif; ?>
 
-    <canvas id="graficaGlucosa"></canvas>
-    <a href="seleccionar.php" class="btn-volver">🏠 Menú Principal</a>
+    <canvas id="graficaInsulina"></canvas>
+    <a href="seleccionar.php" class="btn btn-volver">🏠 Menú Principal</a>
   </div>
 
   <script>
-    const ctx = document.getElementById('graficaGlucosa').getContext('2d');
-    const datosGlucosa = <?= json_encode($datosGlucosa) ?>;
+    const ctx = document.getElementById('graficaInsulina').getContext('2d');
+    const datosInsulina = <?= json_encode($datosInsulina) ?>;
+    
     new Chart(ctx, {
-      type: 'scatter',
+      type: 'line',
       data: {
+        labels: datosInsulina.map(d => d.x),
         datasets: [{
-          label: 'Nivel de Glucosa por Día',
-          data: datosGlucosa,
-          backgroundColor: 'rgba(231, 76, 60, 0.7)',
-          borderColor: '#e74c3c',
-          pointRadius: 6,
-          pointHoverRadius: 8,
+          label: 'Insulina Administrada por Día (UI)',
+          data: datosInsulina.map(d => d.y),
+          backgroundColor: 'rgba(52, 152, 219, 0.6)',
+          borderColor: '#3498db',
+          borderWidth: 2,
+          fill: true
         }]
       },
       options: {
         scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-            title: {
-              display: true,
-              text: 'Días del Mes',
-              color: '#fff',
-              font: { size: 14 }
-            },
-            ticks: {
-              color: '#f1c40f',
-              maxRotation: 0,
-              minRotation: 0,
-              callback: function(value) {
-                return Math.round(value);
-              }
-            },
-            grid: { display: false }
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Glucosa (mg/dL)',
-              color: '#fff',
-              font: { size: 14 }
-            },
-            ticks: { color: '#f1c40f' }
-          }
-        },
-        plugins: {
-          legend: {
-            labels: { color: '#f1c40f' }
-          }
+          x: { title: { display: true, text: 'Días del Mes' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Unidades de Insulina (UI)' } }
         }
       }
     });
